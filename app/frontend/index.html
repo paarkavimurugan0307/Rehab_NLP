@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HandRehab AI — Post-Surgical Recovery Monitoring</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Local Vendored Chart.js -->
+  <script src="vendor/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- SCREEN 1: INTERACTIVE AUTHENTICATION PORTAL (LOGIN / REGISTER) -->
+  <!-- ============================================================ -->
+  <section id="auth-screen" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <span class="auth-logo-icon">🖐️</span>
+        <h1>HandRehab AI</h1>
+        <p class="auth-subtitle">Post-Surgical Hand Rehabilitation & Recovery Monitoring</p>
+      </div>
+
+      <div class="auth-disclaimer-mini">
+        <strong>Notice:</strong> Objective rehabilitation monitoring aid, not a diagnostic medical device.
+      </div>
+
+      <!-- Auth Toggle Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-btn-login" class="auth-tab-btn active">Sign In</button>
+        <button id="tab-btn-register" class="auth-tab-btn">Register New Patient</button>
+      </div>
+
+      <!-- Error / Status Message Alert -->
+      <div id="auth-alert" class="auth-alert hidden"></div>
+
+      <!-- Demo Credentials Helper Pill -->
+      <div class="auth-demo-pill" id="demo-credentials-pill">
+        <div class="demo-pill-header">
+          <span>🔑 <strong>Demo Account (Ready to Test):</strong></span>
+          <button type="button" id="btn-fill-credentials" class="btn-fill-creds" title="Fill demo credentials">Fill In</button>
+        </div>
+        <div class="demo-pill-fields">
+          <span>Username: <strong class="cred-tag">demo_patient</strong></span>
+          <span>Password: <strong class="cred-tag">rehab123</strong></span>
+        </div>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="form-login" class="auth-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" value="demo_patient" placeholder="e.g. demo_patient" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" value="rehab123" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="button" id="btn-submit-login" class="btn btn-primary btn-block">Sign In to Dashboard</button>
+        
+        <div class="auth-demo-shortcut">
+          <span>Or test immediately with demo patient:</span>
+          <button type="button" id="btn-quick-demo" class="btn btn-secondary btn-block">⚡ Quick Demo as Alex Mercer</button>
+        </div>
+      </form>
+
+      <!-- REGISTRATION FORM -->
+      <form id="form-register" class="auth-form hidden" onsubmit="return false;">
+        <div class="form-group">
+          <label for="reg-fullname">Full Name</label>
+          <input type="text" id="reg-fullname" placeholder="e.g. Sarah Jenkins" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-surgery">Rehab Condition / Surgery</label>
+          <select id="reg-surgery">
+            <option value="Flexor Tendon Repair (Zone II)">Palm / Finger Tendon Repair (Flexor Tendon Zone II)</option>
+            <option value="Extensor Tendon Repair">Back of Hand / Finger Straightening (Extensor Tendon)</option>
+            <option value="Distal Radius Fracture Recovery">Broken Wrist Recovery (Distal Radius Fracture)</option>
+            <option value="Carpal Tunnel Release Post-Op">Carpal Tunnel Release (Nerve Decompression &amp; Recovery)</option>
+            <option value="General Hand Mobility Rehabilitation">General Hand Mobility &amp; Stiffness (Everyday Recovery)</option>
+          </select>
+          <div id="reg-condition-info" class="reg-condition-card">
+            <div class="condition-card-header">
+              <span class="condition-badge" id="reg-card-badge">Condition Guide</span>
+              <strong id="reg-card-title">Palm / Finger Tendon Repair</strong>
+            </div>
+            <p id="reg-card-desc" class="condition-card-desc">Repair of tendons on the palm side that pull your fingers inward. Rehabilitation focuses on gentle active gliding to prevent internal scar adhesions.</p>
+            <div class="condition-card-ex">
+              <span class="ex-label">Prescribed Camera Exercises:</span>
+              <strong id="reg-card-exercise">Gesture 1: Hook Fist | Gesture 2: Individual Finger Bend</strong>
+            </div>
+            <div class="condition-card-note">
+              <span>⚠️ Important: These are candidate gestures for your project. For tendon repairs and postoperative conditions, show or recommend a gesture only when it is permitted by the patient's surgeon or hand therapist.</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-username">Choose Username</label>
+          <input type="text" id="reg-username" placeholder="e.g. sarah_j" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Choose Password (min 4 chars)</label>
+          <input type="password" id="reg-password" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+        <button type="button" id="btn-submit-register" class="btn btn-success btn-block">Create Patient Account</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SCREEN 2: MAIN MULTI-VIEW REHABILITATION DASHBOARD           -->
+  <!-- ============================================================ -->
+  <div id="dashboard-app" class="dashboard-wrapper hidden">
+    <!-- Clinical Disclaimer & App Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="logo-area">
+          <span class="icon">🖐️</span>
+          <div>
+            <h1>HandRehab AI</h1>
+            <p class="subtitle">Clinical Recovery Monitoring System</p>
+          </div>
+        </div>
+
+        <!-- User Profile Pill -->
+        <div class="user-profile-bar">
+          <div class="user-info">
+            <span class="user-name" id="display-user-name">Alex Mercer</span>
+            <span class="user-condition" id="display-user-surgery">Flexor Tendon Repair</span>
+          </div>
+          <button id="btn-logout" class="btn btn-outline btn-sm">🚪 Sign Out</button>
+        </div>
+      </div>
+
+      <div class="disclaimer-banner">
+        <span class="badge-notice">CLINICAL NOTICE</span>
+        <span>This system is an objective rehabilitation monitoring aid, not a diagnostic medical device. Alerts advise consulting your physiotherapist.</span>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="main-nav-tabs">
+        <button id="nav-btn-diary" class="nav-tab active">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">1. Daily Rehab Diary</span>
+        </button>
+        <button id="nav-btn-camera" class="nav-tab">
+          <span class="nav-icon">📷</span>
+          <span class="nav-text">2. Camera Exercise Tracker</span>
+        </button>
+        <button id="nav-btn-report" class="nav-tab">
+          <span class="nav-icon">📈</span>
+          <span class="nav-text">3. Your Recovery Progress</span>
+        </button>
+      </nav>
+    </header>
+
+    <main class="page-container">
+
+      <!-- ============================================================ -->
+      <!-- VIEW 1: REHABILITATION DIARY (NLP)                           -->
+      <!-- ============================================================ -->
+      <section id="view-diary" class="view-panel active">
+        <div class="panel-intro">
+          <h2>📝 Step 1: Daily Subjective Diary Entry</h2>
+          <p>Describe how your hand feels today in your own words. The multi-head NLP model classifies your severity across 4 dimensions (0=None to 3=Severe) and isolates causal symptom words.</p>
+        </div>
+
+        <div class="diary-card card">
+          <div class="quick-samples">
+            <span class="label-tiny">Quick Samples:</span>
+            <button class="chip-sample" data-text="No pain today but my fingers were very stiff in the morning.">Morning Stiffness</button>
+            <button class="chip-sample" data-text="Mild ache after typing, wrist is a bit tight but moving fine.">Mild Ache</button>
+            <button class="chip-sample" data-text="Sharp pain when I tried to close my fist, could not hold a cup.">Acute Flare-Up</button>
+            <button class="chip-sample" data-text="Felt much better, did all my exercises and gripped a bottle easily.">Full Movement</button>
+          </div>
+
+          <textarea id="diary-input" rows="4" placeholder="e.g., Woke up with no pain, but my fingers were slightly stiff when opening jars this morning..."></textarea>
+          
+          <div class="action-row">
+            <button id="btn-analyze-diary" class="btn btn-primary">🔍 Analyze Symptoms (NLP)</button>
+            <span id="diary-loading" class="spinner-text hidden">Processing NLP tokens...</span>
+          </div>
+
+          <!-- Severities Output Grid -->
+          <div class="severity-grid">
+            <div class="severity-card" id="card-pain">
+              <span class="sev-name">Pain</span>
+              <span class="sev-val" id="val-pain">-</span>
+              <span class="sev-badge" id="badge-pain">Pending</span>
+            </div>
+            <div class="severity-card" id="card-stiffness">
+              <span class="sev-name">Stiffness</span>
+              <span class="sev-val" id="val-stiffness">-</span>
+              <span class="sev-badge" id="badge-stiffness">Pending</span>
+            </div>
+            <div class="severity-card" id="card-mobility">
+              <span class="sev-name">Mobility Limit</span>
+              <span class="sev-val" id="val-mobility">-</span>
+              <span class="sev-badge" id="badge-mobility">Pending</span>
+            </div>
+            <div class="severity-card" id="card-grip">
+              <span class="sev-name">Grip Weakness</span>
+              <span class="sev-val" id="val-grip">-</span>
+              <span class="sev-badge" id="badge-grip">Pending</span>
+            </div>
+          </div>
+
+          <!-- Causal Word Attribution -->
+          <div class="causal-words-container">
+            <h3>🎯 Explainable Attention & Causal Word Attribution</h3>
+            <p class="card-tiny">Words that triggered the severity score (highlighted chips indicate higher causal importance):</p>
+            <div id="causal-chips" class="chip-container">
+              <span class="placeholder-text">Click "Analyze Symptoms" above to view causal words.</span>
+            </div>
+          </div>
+
+          <!-- TODAY'S DIARY SESSION READY & ACTIONS BOX -->
+          <div class="session-summary-box diary-session-box" id="diary-session-summary-card">
+            <h4>Today's Session Ready:</h4>
+            <ul class="session-bullets">
+              <li>Pain: <strong id="diary-summary-pain">0 (None)</strong></li>
+              <li>Stiffness: <strong id="diary-summary-stiffness">0 (None)</strong></li>
+              <li>Mobility: <strong id="diary-summary-mobility">0 (None)</strong></li>
+              <li>Grip: <strong id="diary-summary-grip">0 (None)</strong></li>
+              <li>Peak Range of Motion (ROM): <strong id="diary-summary-rom">5°</strong></li>
+              <li>Completed Reps: <strong id="diary-summary-reps">0</strong></li>
+            </ul>
+
+            <div class="save-actions-group">
+              <button id="btn-diary-save-session" class="btn btn-primary btn-block btn-lg">💾 Save / Update Today (<span id="label-diary-save-day">Day 1</span>)</button>
+              <p class="save-subtext">Multiple sessions on the same calendar day accumulate reps and keep your peak ROM and latest diary symptoms for that day.</p>
+            </div>
+
+            <div class="diary-nav-actions-row">
+              <button id="btn-goto-exercise" class="btn btn-success btn-lg">📷 Proceed to Step 2: Camera Exercise Tracker</button>
+              <button id="btn-diary-goto-report" class="btn btn-secondary btn-lg">📈 View Your Recovery Progress</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- VIEW 2: CAMERA EXERCISE TRACKER (VISION)                     -->
+      <!-- ============================================================ -->
+      <section id="view-camera" class="view-panel">
+        <div class="panel-intro">
+          <h2>📷 Step 2: Objective Hand Exercise Tracker</h2>
+          <p>Perform prescribed finger curls in front of your camera. MediaPipe Tasks Vision measures 21 hand landmarks, 3D joint angles, active flexion ROM, and counts repetitions in real time.</p>
+        </div>
+
+        <!-- INTERACTIVE EXERCISE GUIDE: WHAT TO DO WITH YOUR HAND -->
+        <div class="exercise-guide-box">
+          <div class="guide-header">
+            <div class="guide-header-row">
+              <div class="guide-badge-group">
+                <span class="guide-badge">EXERCISE GUIDE</span>
+                <span id="guide-condition-badge" class="guide-condition-pill">🎯 Prescribed for: Palm / Finger Tendon Repair</span>
+              </div>
+              <div class="guide-selector-wrap">
+                <label for="guide-condition-select" class="guide-select-label">Condition Guide:</label>
+                <select id="guide-condition-select" class="guide-condition-select">
+                  <option value="flexor">Palm / Finger Tendon Repair (Flexor)</option>
+                  <option value="extensor">Back of Hand Tendon Repair (Extensor)</option>
+                  <option value="radius">Broken Wrist Recovery (Distal Radius)</option>
+                  <option value="carpal">Carpal Tunnel Release Post-Op</option>
+                  <option value="general">General Hand Mobility &amp; Stiffness</option>
+                </select>
+              </div>
+            </div>
+            <h3 id="guide-exercise-title">Prescribed Exercise: Hook Fist</h3>
+            <!-- GESTURE TOGGLE BUTTONS -->
+            <div class="gesture-switcher-row" id="gesture-switcher-row">
+              <button type="button" class="btn-gesture active" id="btn-gesture-1">Gesture 1: Hook Fist</button>
+              <button type="button" class="btn-gesture" id="btn-gesture-2">Gesture 2: Individual Finger Bend</button>
+            </div>
+            <!-- EVERYDAY ANALOGY / VISUAL SHORTCUT -->
+            <div class="guide-analogy-callout" id="guide-analogy-callout">
+              <span class="analogy-icon">💡</span>
+              <div class="analogy-text-wrap">
+                <span class="analogy-subtitle">EASY WAY TO PICTURE IT:</span>
+                <strong id="guide-analogy-text" class="analogy-highlight">Think of a Pirate Hook or Cat Claw 🪝</strong>
+              </div>
+            </div>
+            <p id="guide-condition-goal" class="guide-goal-text"><strong>Rehabilitation Goal:</strong> Gently curl only your fingertips while keeping your main knuckles straight.</p>
+            <p id="guide-clinical-advisory" class="guide-advisory-text">⚠️ <strong>Clinical Notice:</strong> Important: These are candidate gestures for your project. For tendon repairs and postoperative conditions, show or recommend a gesture only when it is permitted by the patient's surgeon or hand therapist.</p>
+          </div>
+          <!-- VISUAL ILLUSTRATION & STEP GUIDES -->
+          <div class="guide-main-row">
+            <!-- Left: Visual Hand Posture Diagram -->
+            <div class="guide-posture-card" id="guide-posture-card">
+              <span class="posture-tag">TARGET HAND SHAPE</span>
+              <div class="posture-svg-wrap" id="guide-posture-svg">
+                <!-- SVG dynamically injected via JS -->
+              </div>
+              <strong id="guide-posture-caption" class="posture-caption">Hook Fist Target Shape</strong>
+            </div>
+
+            <!-- Right: 3-Step Action Cards -->
+            <div class="guide-steps-grid">
+              <div class="guide-step-card" id="guide-step-1">
+                <div class="step-icon" id="guide-step-1-icon">🖐️</div>
+                <div class="step-content">
+                  <h4 id="guide-step-1-title">1. Start Flat</h4>
+                  <p id="guide-step-1-desc">Hold your hand upright facing the camera like a stop sign with fingers straight.</p>
+                </div>
+              </div>
+              <div class="guide-step-card" id="guide-step-2">
+                <div class="step-icon" id="guide-step-2-icon">🪝</div>
+                <div class="step-content">
+                  <h4 id="guide-step-2-title">2. Bend into Hook</h4>
+                  <p id="guide-step-2-desc">Curl only your top two finger joints into a hook. Keep your big knuckles straight!</p>
+                </div>
+              </div>
+              <div class="guide-step-card" id="guide-step-3">
+                <div class="step-icon" id="guide-step-3-icon">✨</div>
+                <div class="step-content">
+                  <h4 id="guide-step-3-title">3. Open Flat to Count</h4>
+                  <p id="guide-step-3-desc">Straighten fingers completely back to open palm to register <strong>+1 Rep</strong>!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- DO'S & DON'TS -->
+          <div class="guide-dos-donts" id="guide-dos-donts">
+            <div class="dos-box">
+              <span class="dos-badge">✅ WHAT TO DO</span>
+              <span id="guide-do-text">Keep big knuckles flat and upright; curl only the fingertips inward smoothly.</span>
+            </div>
+            <div class="donts-box">
+              <span class="donts-badge">❌ WHAT TO AVOID</span>
+              <span id="guide-dont-text">Do not squeeze into a full tight fist; keep your main knuckles straight.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="camera-layout-grid">
+          <!-- Left: Video Panel -->
+          <div class="video-panel card">
+            <div class="vision-controls">
+              <button id="btn-start-camera" class="btn btn-success">▶ Start Camera</button>
+              <button id="btn-stop-camera" class="btn btn-secondary" disabled>⏹ Stop Camera</button>
+              <button id="btn-toggle-guide-overlay" type="button" class="btn btn-primary" title="Show or hide target hand alignment silhouette">🎯 Target Guide: ON</button>
+              <button id="btn-toggle-bg-blur" type="button" class="btn btn-primary" title="Blur room background and spotlight your exercising hand">✨ Hand Focus (Blur BG): ON</button>
+            </div>
+
+            <!-- Live Status Feedback Banner -->
+            <div class="live-action-banner" id="live-action-banner">
+              <span class="live-status-indicator" id="live-status-dot"></span>
+              <span id="live-action-text">Camera ready. Click "Start Camera" to begin guided tracking.</span>
+            </div>
+
+            <div class="video-container">
+              <video id="webcam-video" autoplay playsinline muted></video>
+              <canvas id="vision-canvas"></canvas>
+              <div id="vision-placeholder" class="vision-placeholder">
+                <span>Camera paused or inactive.<br>Click <strong>Start Camera</strong> to track your hand.</span>
+              </div>
+            </div>
+
+            <!-- Real-Time Curl Depth Progress Bar -->
+            <div class="curl-progress-container">
+              <div class="curl-progress-labels">
+                <span>Curl Depth (Flexion Progress)</span>
+                <span id="curl-percent">0%</span>
+              </div>
+              <div class="curl-progress-track">
+                <div id="curl-progress-fill" class="curl-progress-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Real-Time Metrics & Save Card -->
+          <div class="metrics-panel card">
+            <h3>Live Movement Metrics</h3>
+            <div class="vision-metrics-grid">
+              <div class="metric-box">
+                <span class="m-label">Finger Angle</span>
+                <span class="m-val" id="live-angle">175°</span>
+                <span class="m-sub">Index/Middle PIP</span>
+              </div>
+              <div class="metric-box">
+                <span class="m-label">Range of Motion (ROM)</span>
+                <span class="m-val highlight" id="live-rom">5°</span>
+                <span class="m-sub">Flexion (0–100°)</span>
+              </div>
+              <div class="metric-box">
+                <span class="m-label">Reps Completed</span>
+                <span class="m-val highlight-green" id="live-reps">0</span>
+                <span class="m-sub">Target: 10 Reps</span>
+              </div>
+              <div class="metric-box">
+                <span class="m-label">Movement Quality</span>
+                <span class="m-val" id="live-form">95%</span>
+                <span class="m-sub">Form Score</span>
+              </div>
+            </div>
+
+            <div class="session-summary-box">
+              <h4>Today's Session Ready:</h4>
+              <ul class="session-bullets">
+                <li>Pain: <strong id="summary-pain">0 (None)</strong></li>
+                <li>Stiffness: <strong id="summary-stiffness">0 (None)</strong></li>
+                <li>Peak Range of Motion (ROM): <strong id="summary-rom">5°</strong></li>
+                <li>Completed Reps: <strong id="summary-reps">0</strong></li>
+              </ul>
+            </div>
+
+            <div class="save-actions-group">
+              <button id="btn-save-session" class="btn btn-primary btn-block btn-lg">💾 Save / Update Today (<span id="label-save-day">Day 1</span>)</button>
+              <p class="save-subtext">Multiple sessions on the same calendar day accumulate reps and keep your peak ROM for that day.</p>
+            </div>
+            <button id="btn-goto-report" class="btn btn-secondary btn-block">📈 View Your Recovery Progress</button>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- VIEW 3: YOUR RECOVERY PROGRESS                               -->
+      <!-- ============================================================ -->
+      <section id="view-report" class="view-panel">
+        <div class="panel-intro">
+          <h2>📈 Step 3: Your Recovery Progress</h2>
+          <p>Track your daily hand recovery journey, symptom changes, and exercise movement in one place. Review your recorded trends and view estimated AI forecasts.</p>
+        </div>
+
+        <div class="report-layout-grid">
+          <!-- Alert Banner -->
+          <div id="alert-banner" class="status-banner banner-success">
+            <div class="alert-icon" id="alert-icon">✅</div>
+            <div>
+              <h4 id="alert-title">Recovery Progression On Track</h4>
+              <p id="alert-message">Steady functional improvement observed. Continue your prescribed exercises as advised by your physiotherapist.</p>
+            </div>
+          </div>
+
+          <!-- RECOVERY SUMMARY OVERVIEW (6 SEPARATE CARDS) -->
+          <div class="summary-overview-card card">
+            <div class="card-header">
+              <div>
+                <h3>Your Recovery Summary</h3>
+                <p class="chart-subtitle">Latest recorded rehabilitation measurements and symptom levels</p>
+              </div>
+              <span class="pill-tech" id="summary-last-recorded-day">Day —</span>
+            </div>
+            <div class="recovery-metrics-grid">
+              <!-- Card 1: Pain Level -->
+              <div class="rec-metric-card" id="card-metric-pain">
+                <div class="rec-card-header">
+                  <span class="rec-card-icon">⚡</span>
+                  <span class="rec-card-title">Pain Level</span>
+                </div>
+                <div class="rec-card-value" id="rep-val-pain">—</div>
+                <div class="rec-card-scale">Scale: 0 (None) to 3 (Severe)</div>
+                <div class="rec-card-desc" id="rep-desc-pain">No records yet</div>
+              </div>
+
+              <!-- Card 2: Joint Stiffness -->
+              <div class="rec-metric-card" id="card-metric-stiffness">
+                <div class="rec-card-header">
+                  <span class="rec-card-icon">🪵</span>
+                  <span class="rec-card-title">Joint Stiffness</span>
+                </div>
+                <div class="rec-card-value" id="rep-val-stiffness">—</div>
+                <div class="rec-card-scale">Scale: 0 (None) to 3 (Severe)</div>
+                <div class="rec-card-desc" id="rep-desc-stiffness">No records yet</div>
+              </div>
+
+              <!-- Card 3: Finger Mobility -->
+              <div class="rec-metric-card" id="card-metric-mobility">
+                <div class="rec-card-header">
+                  <span class="rec-card-icon">🖐️</span>
+                  <span class="rec-card-title">Finger Mobility</span>
+                </div>
+                <div class="rec-card-value" id="rep-val-mobility">—</div>
+                <div class="rec-card-scale">Scale: 0 (Full) to 3 (Severe limitation)</div>
+                <div class="rec-card-desc" id="rep-desc-mobility">No records yet</div>
+              </div>
+
+              <!-- Card 4: Grip Strength -->
+              <div class="rec-metric-card" id="card-metric-grip">
+                <div class="rec-card-header">
+                  <span class="rec-card-icon">✊</span>
+                  <span class="rec-card-title">Grip Strength</span>
+                </div>
+                <div class="rec-card-value" id="rep-val-grip">—</div>
+                <div class="rec-card-scale">Scale: 0 (Normal) to 3 (Severe weakness)</div>
+                <div class="rec-card-desc" id="rep-desc-grip">No records yet</div>
+              </div>
+
+              <!-- Card 5: Range of Motion (ROM) -->
+              <div class="rec-metric-card" id="card-metric-rom">
+                <div class="rec-card-header">
+                  <span class="rec-card-icon">📐</span>
+                  <span class="rec-card-title">Range of Motion (ROM)</span>
+                </div>
+                <div class="rec-card-value" id="rep-val-rom">—</div>
+                <div class="rec-card-scale">Scale: 0° (flat) to 100° (full fist curl)</div>
+                <div class="rec-card-desc" id="rep-desc-rom">No records yet</div>
+              </div>
+
+              <!-- Card 6: Completed Repetitions -->
+              <div class="rec-metric-card" id="card-metric-reps">
+                <div class="rec-card-header">
+                  <span class="rec-card-icon">🔄</span>
+                  <span class="rec-card-title">Completed Repetitions</span>
+                </div>
+                <div class="rec-card-value" id="rep-val-reps">—</div>
+                <div class="rec-card-scale">Exercise target: 10 reps / session</div>
+                <div class="rec-card-desc" id="rep-desc-reps">No records yet</div>
+              </div>
+            </div>
+
+            <div class="summary-next-step-box">
+              <span class="next-step-icon">💡</span>
+              <span class="next-step-text" id="summary-next-step"><strong>Next Step:</strong> Continue your prescribed exercises as advised by your physiotherapist. If symptoms persist or worsen, please consult your physiotherapist.</span>
+            </div>
+          </div>
+
+          <!-- UNDERSTANDING RANGE OF MOTION (ROM) EDUCATIONAL BOX -->
+          <div class="rom-educational-card card">
+            <div class="card-header">
+              <div>
+                <h3>Understanding Range of Motion (ROM)</h3>
+                <p class="chart-subtitle">Clear definition and details of your joint movement measurements</p>
+              </div>
+              <span class="pill-tech">Movement Guide</span>
+            </div>
+            <div class="rom-educational-content">
+              <div class="rom-def-banner">
+                <span class="rom-def-icon">💡</span>
+                <div class="rom-def-text">
+                  <strong>ROM Definition:</strong> ROM measures how far a joint can move, in degrees.
+                </div>
+              </div>
+              <div class="rom-expl-grid">
+                <div class="rom-expl-item">
+                  <div class="expl-icon">🖐️</div>
+                  <div>
+                    <strong>Specific Joint Measured</strong>
+                    <p>Index &amp; Middle Finger Knuckles (Proximal Interphalangeal - PIP joints).</p>
+                  </div>
+                </div>
+                <div class="rom-expl-item">
+                  <div class="expl-icon">🔄</div>
+                  <div>
+                    <strong>Specific Movement Measured</strong>
+                    <p>Active finger flexion: curling fingers inward from a straight open palm to a tight closed fist.</p>
+                  </div>
+                </div>
+                <div class="rom-expl-item">
+                  <div class="expl-icon">📐</div>
+                  <div>
+                    <strong>Measurement Scale</strong>
+                    <p>0° indicates a flat open palm (full extension); 100° indicates a complete closed fist (maximum active flexion).</p>
+                  </div>
+                </div>
+                <div class="rom-expl-item">
+                  <div class="expl-icon">🔍</div>
+                  <div>
+                    <strong>Actual Measurement vs. AI Forecast</strong>
+                    <p>Your recorded ROM (e.g. 100°) is the single highest peak flexion achieved during camera exercise today. The AI forecast (e.g. 68.5°) is a smoothed 14-day rolling trend projection estimating your sustained average movement capability.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECOVERY CHARTS SECTION (THREE PATIENT-FRIENDLY GRAPHS) -->
+          <div class="recovery-charts-container">
+            <!-- Graph 1: Recovery Progress Over Time (Pain & Stiffness Trend) -->
+            <div class="chart-card card" id="card-pain-stiffness-chart">
+              <div class="card-header">
+                <div>
+                  <h3>1. Pain and Stiffness Trend (Recovery Progress Over Time)</h3>
+                  <p class="chart-subtitle">Daily reported Pain and Stiffness on a 0–3 scale (0 = None, 1 = Mild, 2 = Moderate, 3 = Severe)</p>
+                </div>
+                <span class="pill-tech">Symptom Tracking</span>
+              </div>
+
+              <!-- Notice when only 1 session is recorded -->
+              <div id="notice-single-session-symptoms" class="chart-notice-banner hidden">
+                <span class="notice-icon">ℹ️</span>
+                <span><strong>1 session recorded.</strong> Showing baseline point. Complete additional daily sessions to identify recovery trends.</span>
+              </div>
+
+              <!-- Empty state when 0 sessions -->
+              <div id="empty-state-symptoms" class="chart-empty-state hidden">
+                <span class="empty-icon">📊</span>
+                <h4>No Recorded Sessions</h4>
+                <p>Record your first session to see your recovery graph.</p>
+              </div>
+
+              <div class="chart-wrapper" id="wrapper-pain-stiffness">
+                <canvas id="painStiffnessChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Graph 2: Hand Movement (ROM) Trend -->
+            <div class="chart-card card" id="card-rom-chart">
+              <div class="card-header">
+                <div>
+                  <h3>2. Hand Movement (ROM) Trend</h3>
+                  <p class="chart-subtitle">Actual measured active Range of Motion (ROM) in degrees (0° = open palm, 100° = full fist flexion)</p>
+                </div>
+                <span class="pill-tech">Range of Motion (ROM)</span>
+              </div>
+
+              <!-- Notice when only 1 session is recorded -->
+              <div id="notice-single-session-rom" class="chart-notice-banner hidden">
+                <span class="notice-icon">ℹ️</span>
+                <span><strong>1 session recorded.</strong> Showing baseline measurement. Complete additional daily sessions to identify recovery trends.</span>
+              </div>
+
+              <!-- Empty state when 0 sessions -->
+              <div id="empty-state-rom" class="chart-empty-state hidden">
+                <span class="empty-icon">🖐️</span>
+                <h4>No Recorded Sessions</h4>
+                <p>Record your first session to see your recovery graph.</p>
+              </div>
+
+              <div class="chart-wrapper" id="wrapper-rom">
+                <canvas id="romChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Graph 3: Mobility and Grip Strength Trend -->
+            <div class="chart-card card" id="card-mobility-grip-chart">
+              <div class="card-header">
+                <div>
+                  <h3>3. Mobility and Grip Strength Trend</h3>
+                  <p class="chart-subtitle">Daily reported Mobility Limitation and Grip Weakness on a 0–3 functional scale (0 = Normal, 1 = Mild, 2 = Moderate, 3 = Severe)</p>
+                </div>
+                <span class="pill-tech">Functional Tracking</span>
+              </div>
+
+              <!-- Notice when only 1 session is recorded -->
+              <div id="notice-single-session-mobility-grip" class="chart-notice-banner hidden">
+                <span class="notice-icon">ℹ️</span>
+                <span><strong>1 session recorded.</strong> Showing baseline measurement. Complete additional daily sessions to identify recovery trends.</span>
+              </div>
+
+              <!-- Empty state when 0 sessions -->
+              <div id="empty-state-mobility-grip" class="chart-empty-state hidden">
+                <span class="empty-icon">✊</span>
+                <h4>No Recorded Sessions</h4>
+                <p>Record your first session to see your recovery graph.</p>
+              </div>
+
+              <div class="chart-wrapper" id="wrapper-mobility-grip">
+                <canvas id="mobilityGripChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forecast Box: Tomorrow's Estimated Recovery -->
+          <div class="forecast-card card">
+            <div class="card-header">
+              <div>
+                <h3>Tomorrow's Estimated Recovery</h3>
+                <p class="chart-subtitle">AI statistical estimate based on your 14-day history (separate from actual recorded measurements):</p>
+              </div>
+              <span id="forecast-model-badge" class="pill-tech">Multi-Task GRU (AI Estimate)</span>
+            </div>
+
+            <div id="forecast-pending-notice" class="forecast-notice-banner">
+              <span class="notice-icon">⏳</span>
+              <span id="forecast-pending-text">AI 1-day forecasting requires at least 14 days of recorded sessions to detect trends accurately. Currently recorded: <strong>0 / 14 days</strong>.</span>
+            </div>
+
+            <div id="forecast-pills-row" class="forecast-pills hidden">
+              <span class="f-pill">Estimated Pain: <strong id="f-pain">—</strong></span>
+              <span class="f-pill">Estimated Stiffness: <strong id="f-stiff">—</strong></span>
+              <span class="f-pill">Estimated Mobility: <strong id="f-mob">—</strong></span>
+              <span class="f-pill">Estimated Grip Weakness: <strong id="f-grip">—</strong></span>
+              <span class="f-pill">Estimated Range of Motion (ROM): <strong id="f-rom">—</strong></span>
+            </div>
+
+            <div class="forecast-footnote">
+              <span class="footnote-icon">ℹ️</span>
+              <span class="footnote-text"><strong>AI Estimate Note:</strong> Forecasts are mathematical projections based on 14-day trends, not clinical diagnostic results. Model uncertainty may vary across individuals. Always consult your physiotherapist regarding recovery progress.</span>
+            </div>
+          </div>
+
+          <!-- Session History Table -->
+          <div class="history-table-card card">
+            <div class="card-header">
+              <div>
+                <h3>Your Recorded Rehabilitation Sessions</h3>
+                <p class="chart-subtitle">Complete chronological history of your recorded rehabilitation sessions</p>
+              </div>
+              <div class="history-header-actions">
+                <div class="history-filter-group" role="group" aria-label="Session Filter">
+                  <button type="button" class="btn btn-filter active" id="filter-all" data-filter="all">All Sessions</button>
+                  <button type="button" class="btn btn-filter" id="filter-14" data-filter="14">Last 14 Days</button>
+                  <button type="button" class="btn btn-filter" id="filter-7" data-filter="7">Last 7 Days</button>
+                </div>
+                <button type="button" id="btn-sort-history" class="btn btn-outline btn-sm" title="Toggle Sort Order">↕️ <span id="sort-order-label">Oldest First</span></button>
+                <button type="button" id="btn-refresh-history" class="btn btn-outline btn-sm">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Date / Time</th>
+                    <th>Pain (0–3)</th>
+                    <th>Stiffness (0–3)</th>
+                    <th>Mobility (0–3)</th>
+                    <th>Grip (0–3)</th>
+                    <th>Range of Motion (ROM)</th>
+                    <th>Reps</th>
+                    <th>Diary Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <tr><td colspan="9" class="text-center">Loading patient records...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <p>HandRehab AI — Pair Programming Research Prototype | Fixed Seed 42 | PyTorch & MediaPipe Tasks Vision JS</p>
+      <p class="footer-disclaimer">Notice: Simulated and experimental data. Not certified for medical diagnosis or clinical prescription. Consult a licensed physiotherapist.</p>
+    </footer>
+  </div>
+
+  <!-- Immediate Bulletproof Auth Controller (Zero-delay, No dependencies) -->
+  <script>
+    (function() {
+      // 1. Sanitize any legacy URL search query if a GET submission ever happened
+      try {
+        if (window.location.search && (window.location.search.includes('login-') || window.location.search.includes('username'))) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (e) {}
+
+      function showAuthAlert(msg, type) {
+        const el = document.getElementById('auth-alert');
+        if (!el) return;
+        if (!msg) {
+          el.className = 'auth-alert hidden';
+          el.textContent = '';
+          return;
+        }
+        el.className = 'auth-alert ' + (type || 'error');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+      }
+
+      function transitionToDashboard(user) {
+        try {
+          sessionStorage.setItem('handrehab_user', JSON.stringify(user));
+          const auth = document.getElementById('auth-screen');
+          const dash = document.getElementById('dashboard-app');
+          if (auth) auth.classList.add('hidden');
+          if (dash) dash.classList.remove('hidden');
+          const nameEl = document.getElementById('display-user-name');
+          if (nameEl && user.full_name) nameEl.textContent = user.full_name;
+          const surgEl = document.getElementById('display-user-surgery');
+          if (surgEl && user.surgery_type) surgEl.textContent = user.surgery_type;
+
+          window.__activeUser = user;
+          if (typeof window.loadUserSession === 'function') {
+            window.loadUserSession(user);
+          }
+        } catch (err) {
+          console.error('transitionToDashboard error:', err);
+        }
+      }
+
+      async function executeLogin(username, password) {
+        showAuthAlert('Signing in...', 'success');
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (res.ok && data.success && data.user) {
+            showAuthAlert('');
+            transitionToDashboard(data.user);
+          } else {
+            showAuthAlert(data.error || 'Invalid credentials. Hint: use demo_patient / rehab123', 'error');
+          }
+        } catch (err) {
+          showAuthAlert('Network error connecting to auth server: ' + err.message, 'error');
+        }
+      }
+
+      async function executeRegister(fullName, surgeryType, username, password) {
+        showAuthAlert('Creating patient account...', 'success');
+        try {
+          const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ full_name: fullName, surgery_type: surgeryType, username, password })
+          });
+          const data = await res.json();
+          if (res.ok && data.success && data.user) {
+            showAuthAlert('Registration successful! Logging in...', 'success');
+            setTimeout(() => transitionToDashboard(data.user), 400);
+          } else {
+            showAuthAlert(data.error || 'Registration failed.', 'error');
+          }
+        } catch (err) {
+          showAuthAlert('Network error during registration: ' + err.message, 'error');
+        }
+      }
+
+      // Check for saved session on load
+      try {
+        const saved = sessionStorage.getItem('handrehab_user');
+        if (saved) {
+          const user = JSON.parse(saved);
+          if (user && user.id) {
+            transitionToDashboard(user);
+          }
+        }
+      } catch (e) {}
+
+      // Wire tabs
+      const tabLogin = document.getElementById('tab-btn-login');
+      const tabReg = document.getElementById('tab-btn-register');
+      const formLogin = document.getElementById('form-login');
+      const formReg = document.getElementById('form-register');
+
+      tabLogin?.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabLogin.classList.add('active');
+        tabReg?.classList.remove('active');
+        formLogin?.classList.remove('hidden');
+        formReg?.classList.add('hidden');
+        showAuthAlert('');
+      });
+
+      tabReg?.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabReg.classList.add('active');
+        tabLogin?.classList.remove('active');
+        formReg?.classList.remove('hidden');
+        formLogin?.classList.add('hidden');
+        showAuthAlert('');
+      });
+
+      // Fill credentials button
+      document.getElementById('btn-fill-credentials')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const u = document.getElementById('login-username');
+        const p = document.getElementById('login-password');
+        if (u) u.value = 'demo_patient';
+        if (p) p.value = 'rehab123';
+        showAuthAlert('Credentials pre-filled! Click "Sign In to Dashboard" to enter.', 'success');
+      });
+
+      // Quick Demo button
+      document.getElementById('btn-quick-demo')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const u = document.getElementById('login-username');
+        const p = document.getElementById('login-password');
+        if (u) u.value = 'demo_patient';
+        if (p) p.value = 'rehab123';
+        executeLogin('demo_patient', 'rehab123');
+      });
+
+      // Form login submit & button click
+      function triggerLoginFromInputs() {
+        const u = document.getElementById('login-username')?.value?.trim() || '';
+        const p = document.getElementById('login-password')?.value?.trim() || '';
+        if (!u || !p) {
+          showAuthAlert('Please enter both username and password.', 'error');
+          return;
+        }
+        executeLogin(u, p);
+      }
+
+      formLogin?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        triggerLoginFromInputs();
+      });
+
+      document.getElementById('btn-submit-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        triggerLoginFromInputs();
+      });
+
+      // Enter key inside password or username inputs
+      ['login-username', 'login-password'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            triggerLoginFromInputs();
+          }
+        });
+      });
+
+      // Registration submit
+      function triggerRegisterFromInputs() {
+        const fullName = document.getElementById('reg-fullname')?.value?.trim();
+        const surgeryType = document.getElementById('reg-surgery')?.value;
+        const username = document.getElementById('reg-username')?.value?.trim();
+        const password = document.getElementById('reg-password')?.value?.trim();
+        if (!fullName || !username || !password) {
+          showAuthAlert('Please fill in all registration fields.', 'error');
+          return;
+        }
+        executeRegister(fullName, surgeryType, username, password);
+      }
+
+      formReg?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        triggerRegisterFromInputs();
+      });
+
+      document.getElementById('btn-submit-register')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        triggerRegisterFromInputs();
+      });
+
+      // Export helpers to window
+      window.__authController = {
+        transitionToDashboard,
+        executeLogin,
+        showAuthAlert
+      };
+    })();
+  </script>
+
+  <!-- Application Logic (ES Module for local MediaPipe Tasks Vision JS) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

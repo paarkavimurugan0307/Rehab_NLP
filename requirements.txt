@@ -1,0 +1,15 @@
+torch
+numpy<2
+pandas
+scikit-learn
+nltk
+gensim
+mediapipe
+opencv-python
+matplotlib
+seaborn
+flask
+werkzeug
+shap
+pytest
+jupyter
